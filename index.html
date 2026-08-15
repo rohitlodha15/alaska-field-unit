@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Alaska Field Unit</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alaska">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{
+  --bg:#0B1512; --panel:#122019; --panel2:#0F1B15; --line:#1E332A;
+  --ink:#E7EFE9; --dim:#8FA79B; --mono:ui-monospace,'SF Mono',Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  --serif:ui-serif,'New York',Georgia,serif;
+  --go:#3FE08F; --maybe:#E0A23F; --sleep:#8B93D6; --bad:#D96B5C;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+html.day{ --bg:#EEF3F1; --panel:#F7FAF8; --panel2:#E9F0EC; --line:#C9D6D0; --ink:#16241F; --dim:#5A6E65; }
+html.nv{ --bg:#140505; --panel:#1D0808; --panel2:#170606; --line:#3A1010;
+  --ink:#FF6B57; --dim:#A63C2E; --go:#FF7A5C; --maybe:#FF7A5C; --sleep:#7A2A1E; --bad:#FF7A5C; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{touch-action:manipulation}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;
+  padding-top:var(--sat);overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+#app{max-width:560px;margin:0 auto;padding:12px 14px calc(86px + var(--sab))}
+.screen{display:none}.screen.on{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--go);outline-offset:2px;border-radius:6px}
+h1{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.2px}
+.kick{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+.card.sub{background:var(--panel2)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mono{font-family:var(--mono)}
+.dimt{color:var(--dim);font-size:12.5px}
+.chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:3px 8px;border-radius:6px;border:1px solid var(--line);color:var(--dim)}
+.chip.info{border-color:var(--sleep);color:var(--sleep)}
+button,.btn{font-family:var(--sans);font-size:14px;font-weight:600;background:var(--panel2);color:var(--ink);
+  border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;min-height:44px}
+.btn.go{background:var(--go);color:#06130C;border-color:transparent}
+.btn.wide{width:100%;margin-top:8px}
+a{color:inherit}
+#tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 86%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;padding:8px 4px calc(8px + var(--sab));z-index:1000}
+.tab{flex:1;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim);cursor:pointer;padding:6px 0;border:none;background:none;min-height:48px}
+.tab .ico{font-size:18px;display:block;margin-bottom:2px;filter:grayscale(1) opacity(.6)}
+.tab.on{color:var(--ink)}.tab.on .ico{filter:none}
+.hero{padding:16px 4px 6px;position:relative}
+#gear{position:absolute;right:0;top:14px;font-size:20px;background:none;border:none;color:var(--dim);min-height:auto;padding:6px}
+#clock{font-family:var(--mono);font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1}
+.lamp{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;border:1px solid var(--line);margin:10px 0;background:var(--panel);cursor:pointer}
+.lamp .dot{width:46px;height:46px;border-radius:50%;flex:none;box-shadow:0 0 22px 2px currentColor;background:currentColor}
+.lamp .v{font-family:var(--mono);font-weight:800;font-size:20px;letter-spacing:.06em}
+.next .t{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.next .n{font-size:16px;font-weight:650;margin:2px 0}
+.cd{font-family:var(--mono);color:var(--go);font-size:12px}
+.day{border:1px solid var(--line);border-radius:16px;background:var(--panel);margin:10px 0;overflow:hidden}
+.dh{display:flex;justify-content:space-between;gap:8px;padding:11px 13px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
+.dh b{color:var(--ink)}
+.leg{display:grid;grid-template-columns:58px 1fr auto;gap:8px;padding:10px 13px;border-top:1px dashed var(--line);align-items:center}
+.leg:first-of-type{border-top:none}
+.leg .lt{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.leg .lt.edit{color:var(--maybe);text-decoration:underline dotted;cursor:pointer}
+.leg .ln{font-size:13.5px;font-weight:600}
+.leg .ls{font-size:11.5px;color:var(--dim)}
+.leg .act{display:flex;gap:6px}
+.iconb{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:15px;text-decoration:none}
+#map{height:60vh;border-radius:16px;border:1px solid var(--line)}
+.leaflet-container{background:var(--panel2);font-family:var(--sans)}
+.mappop b{font-size:13px}.mappop .dimt{margin:2px 0 6px}
+.legendrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.gauge{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.g{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.g .gv{font-family:var(--mono);font-size:20px;font-weight:700}
+.g .gl{font-size:10px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono)}
+.pk{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px dashed var(--line)}
+.pk input{width:22px;height:22px;accent-color:var(--go)}
+.pk.done label{opacity:.4;text-decoration:line-through}
+.pk .who{font-family:var(--mono);font-size:9px;border:1px solid var(--line);border-radius:5px;padding:2px 5px;color:var(--dim)}
+.pk.mine .who{border-color:var(--go);color:var(--go)}
+.pcat{margin-top:14px}
+.prog{height:6px;border-radius:4px;background:var(--panel2);overflow:hidden;margin:6px 0 2px}
+.prog i{display:block;height:100%;background:var(--go);width:0%}
+.sos .card{border-left:3px solid var(--bad)}
+input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px;font-family:var(--mono);font-size:12px;margin-top:6px}
+.foot{margin:18px 0 6px;font-size:10.5px;color:var(--dim);font-family:var(--mono);text-align:center}
+/* overlays */
+.ovl{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 60%,transparent);backdrop-filter:blur(6px);z-index:2000;display:none}
+.ovl.on{display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:16px 16px calc(16px + var(--sab))}
+.sheet h2{font-family:var(--serif);font-size:18px;margin-bottom:8px}
+.set{padding:10px 0;border-bottom:1px dashed var(--line)}
+.set label{font-size:13.5px;font-weight:600;display:block;margin-bottom:6px}
+.set input[type=range]{width:100%;accent-color:var(--go)}
+.seg{display:flex;gap:6px}.seg button{flex:1;padding:8px}
+.seg button.on{background:var(--go);color:#06130C;border-color:transparent}
+/* guide chat */
+#chatlog{display:flex;flex-direction:column;gap:8px;min-height:30vh;max-height:52vh;overflow:auto;padding:4px 0}
+.msg{max-width:86%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.4;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--go);color:#06130C;border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.chatrow{display:flex;gap:8px;margin-top:10px}
+.chatrow input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:11px;font-size:15px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<section class="screen on" id="s-now">
+  <div class="hero">
+    <div class="kick" id="nowdate">ALASKA · FIELD UNIT</div>
+    <div id="clock">--:--</div>
+    <div class="dimt mono" id="clocksub">Anchorage time · sun --</div>
+    <button id="gear" aria-label="Settings" onclick="openSheet('settings')">⚙︎</button>
+  </div>
+  <div class="lamp" id="lampmini" onclick="go('sky')" role="button" aria-label="Sky verdict — open Sky tab">
+    <div class="dot" style="color:var(--sleep)"></div>
+    <div><div class="v" id="lampv">SKY: —</div><div class="dimt" id="lamps">tap for the full verdict</div></div>
+  </div>
+  <div class="card next" id="nextcard"><div class="kick">UP NEXT</div><div id="nextlist"></div></div>
+  <div class="card sub" onclick="openSheet('guide')" role="button" style="cursor:pointer">
+    <div class="row"><div><div class="kick">ASK THE GUIDE · AI</div>
+    <div style="font-weight:650;margin-top:3px">"What's the move tonight?" · "Repack for rain?"</div></div><div style="font-size:22px">💬</div></div>
+  </div>
+  <div class="card sub"><div class="kick">TODAY'S PLAN</div><div id="todaylist" style="margin-top:6px"></div></div>
+  <button class="btn wide" onclick="shareICS()">Add full trip to Calendar — alarms included</button>
+  <button class="btn wide" onclick="prepareOffline()" id="prepbtn">Prepare offline pack (maps + sky data)</button>
+  <div class="foot" id="swstat">offline: checking…</div>
+</section>
+
+<section class="screen" id="s-map">
+  <div class="row"><h1>Route</h1><button onclick="cycleTheme()" id="themebtn" aria-label="Theme">◐ Auto</button></div>
+  <div id="map" role="application" aria-label="Trip map"></div>
+  <div class="legendrow" id="maplegend"></div>
+  <div class="dimt" style="margin-top:6px">Dashed lines are route sketches — the ➤ button on any stop opens true navigation in Apple Maps.</div>
+</section>
+
+<section class="screen" id="s-days">
+  <h1>The seven days</h1>
+  <div class="dimt">Amber dotted times are editable — tap to match your confirmations.</div>
+  <div id="dayscroll"></div>
+</section>
+
+<section class="screen" id="s-sky">
+  <div class="row"><h1>Sky</h1><button onclick="toggleNV()" id="nvbtn">🔴 Night lens</button></div>
+  <div class="lamp" id="lampbig"><div class="dot" style="color:var(--sleep)"></div>
+    <div><div class="v" id="bigv">—</div><div class="dimt" id="bigs">fetching space weather…</div></div></div>
+  <div class="gauge">
+    <div class="g"><div class="gv" id="gkp">—</div><div class="gl">Kp tonight</div></div>
+    <div class="g"><div class="gv" id="gcl">—</div><div class="gl">Cloud %</div></div>
+    <div class="g"><div class="gv" id="gdk">—</div><div class="gl">Dark from</div></div>
+  </div>
+  <div class="card sub"><div class="kick">TONIGHT'S BASE</div><div id="skybase" style="font-weight:650;margin-top:3px">—</div>
+    <div class="dimt">Moon: waning crescent all trip — rises pre-dawn, nights effectively moonless.</div>
+    <div class="dimt mono" id="skyage"></div>
+    <button class="btn wide" onclick="refreshSky(true)">Refresh sky data</button></div>
+  <div class="card" id="gokit" style="display:none">
+    <div class="kick" style="color:var(--go)">VERDICT SAYS GET DRESSED</div>
+    <div style="margin-top:6px;font-size:13.5px">Layers + beanie + HotHands · thermos · headlamp on <b>red</b> · phone on tripod.</div>
+    <div class="card sub" style="margin-top:8px"><b>iPhone camera coach</b><div class="dimt" style="margin-top:4px">
+    Night mode ON → tap ⌃ arrow → drag exposure to 10s (30s on tripod) · AE/AF-lock a bright star · brightness low · shoot 1× or 0.5× wide · patience beats burst.</div></div>
+  </div>
+  <div class="card sub"><div class="kick">HOW THE VERDICT WORKS</div>
+    <div class="dimt" style="margin-top:4px" id="verdictrule"></div></div>
+</section>
+
+<section class="screen" id="s-pack">
+  <div class="row"><h1>Packing</h1><span class="chip" id="whoami"></span></div>
+  <div class="dimt">Checks save on this phone. Your items glow green.</div>
+  <div id="packlist"></div>
+</section>
+
+<section class="screen sos" id="s-sos">
+  <h1>SOS · No-signal card</h1>
+  <div class="dimt">Everything here works with zero bars once the offline pack is prepared.</div>
+  <div id="soslist"></div>
+  <div class="card"><div class="kick">CONFIRMATION NUMBERS</div>
+    <textarea class="note" id="confnotes" rows="3" placeholder="paste confirmation #s here — saved on-device"></textarea></div>
+  <div class="card sub"><div class="kick">KNOWN DEAD ZONES</div>
+    <div class="dimt" style="margin-top:4px">Seward Hwy canyons · Parks Hwy Cantwell–Healy stretches · <b>entire Chena Hot Springs Rd</b> · Steese above Fox · summit ridge. Queue maps + music before these.</div></div>
+</section>
+</div>
+
+<nav id="tabs" role="tablist">
+  <button class="tab on" data-s="now" role="tab"><span class="ico">⌖</span>NOW</button>
+  <button class="tab" data-s="map" role="tab"><span class="ico">🗺</span>MAP</button>
+  <button class="tab" data-s="days" role="tab"><span class="ico">▤</span>DAYS</button>
+  <button class="tab" data-s="sky" role="tab"><span class="ico">☄</span>SKY</button>
+  <button class="tab" data-s="pack" role="tab"><span class="ico">✓</span>PACK</button>
+  <button class="tab" data-s="sos" role="tab"><span class="ico">＋</span>SOS</button>
+</nav>
+
+<!-- Settings sheet -->
+<div class="ovl" id="ovl-settings" onclick="if(event.target===this)closeSheets()">
+ <div class="sheet">
+  <h2>Settings</h2>
+  <div class="set"><label>This phone belongs to</label>
+    <div class="seg" id="ownerseg"><button data-v="R">R</button><button data-v="A">A</button></div></div>
+  <div class="set"><label>Theme</label>
+    <div class="seg" id="themeseg"><button data-v="auto">Auto</button><button data-v="dark">Dark</button><button data-v="day">Day</button></div></div>
+  <div class="set"><label>GO threshold — Kp ≥ <span id="kpv" class="mono"></span></label>
+    <input type="range" min="2.5" max="5" step="0.5" id="kpthr"></div>
+  <div class="set"><label>GO ceiling — cloud ≤ <span id="clv" class="mono"></span>%</label>
+    <input type="range" min="30" max="80" step="5" id="clthr"></div>
+  <div class="set"><label>AI Guide endpoint (Railway proxy URL)</label>
+    <input class="note" id="aiurl" placeholder="https://your-proxy.up.railway.app">
+    <div class="dimt" style="margin-top:4px">Deploy the /proxy folder to Railway with your Anthropic key — README has the 3-minute steps. Leave blank to use the offline guide.</div></div>
+  <div class="set"><button class="btn wide" onclick="if(confirm('Erase all local checks, edits and settings?')){localStorage.clear();location.reload()}">Reset this unit</button></div>
+  <button class="btn wide go" onclick="closeSheets()">Done</button>
+ </div>
+</div>
+
+<!-- Guide chat -->
+<div class="ovl" id="ovl-guide" onclick="if(event.target===this)closeSheets()">
+ <div class="sheet">
+  <div class="row"><h2>The Guide</h2><span class="chip" id="aimode">offline</span></div>
+  <div id="chatlog" aria-live="polite"></div>
+  <div class="chatrow"><input id="chatin" placeholder="Ask about tonight, the plan, packing…" onkeydown="if(event.key==='Enter')sendChat()">
+  <button class="btn go" onclick="sendChat()">➤</button></div>
+ </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+/* ============ TRIP DATA (AKDT = UTC-8) ============ */
+const TZ='-08:00';
+const T=(d,h)=>new Date(`2026-09-0${d}T${h}:00${TZ}`);
+const TRIP=[
+ {d:2,label:'WED 9/2 · ARRIVAL',color:'#3FE08F',base:{name:'Seward Windsong Lodge',lat:60.1758,lon:-149.4137},legs:[
+  {t:'09:03',n:'AS · SFO → SEA → ANC',s:'land 3:05p · right-side windows SEA→ANC',lat:61.1744,lon:-149.9964,tel:'18002527522'},
+  {t:'15:45',n:'Alaskan Car Rental shuttle + pickup',s:'downtown lot · decline CDW (Sapphire covers)',lat:61.2166,lon:-149.8631,tel:'19073392000'},
+  {t:'17:00',n:'Drive south — Turnagain Arm',s:'stop Beluga Pt + Bird Pt · belugas chase silvers',lat:61.0056,lon:-149.6684},
+  {t:'19:45',n:'Dinner: The Cookery',s:'reserve · best veg on the peninsula',lat:60.1043,lon:-149.4423,tel:'19074227459',ek:'cookery'},
+ ]},
+ {d:3,label:'THU 9/3 · FJORDS',color:'#4FC3F7',base:{name:'Seward Windsong Lodge',lat:60.1758,lon:-149.4137},legs:[
+  {t:'08:00',n:'Kenai Fjords cruise',s:'Bonine 1 hr before · midship seats · check-in 1 hr early',lat:60.1204,lon:-149.4367,ek:'cruise'},
+  {t:'17:30',n:'Exit Glacier flat loop (optional)',s:'lower trail only · 1–2 mi',lat:60.1867,lon:-149.6316},
+  {t:'19:30',n:'Dinner downtown Seward',s:'lodge shuttle runs to 10p — cocktails allowed',lat:60.1043,lon:-149.4423},
+ ]},
+ {d:4,label:'FRI 9/4 · GLACIER LANDING',color:'#E0A23F',base:{name:'Denali Bluffs Hotel',lat:63.7387,lon:-148.8968},legs:[
+  {t:'07:45',n:'Depart Seward — grab-and-go breakfast',s:'fuel in Anchorage',lat:60.1758,lon:-149.4137},
+  {t:'12:30',n:'K2 check-in, Talkeetna',s:'bring park-pass receipt · back row = no prop in photos',lat:62.3204,lon:-150.0949,tel:'19077332291'},
+  {t:'13:30',n:'✈ Glacier landing — Ruth Glacier',s:'the crown jewel · scrub = ask about evening seats',lat:62.32,lon:-150.09},
+  {t:'16:00',n:'Talkeetna hour → drive to Denali',s:'arrive Bluffs ~18:30 in daylight',lat:63.7387,lon:-148.8968,tel:'18552341970'},
+  {t:'23:00',n:'☄ Aurora watch №1',s:'Kp ≥ 4 → 12-min drive north to dark pullout',aur:1},
+ ]},
+ {d:5,label:'SAT 9/5 · INTO THE PARK',color:'#CE93D8',base:{name:'Denali Bluffs Hotel',lat:63.7387,lon:-148.8968},legs:[
+  {t:'10:30',n:'Easy walk (pick one)',s:'Horseshoe Lake 2mi · or drive Mile 15 Savage River loop',lat:63.7286,lon:-148.8863},
+  {t:'13:00',n:'Lunch: Prospectors Pizzeria',s:'49-tap wall · 2 min from hotel',lat:63.7386,lon:-148.9052,tel:'19076837437'},
+  {t:'14:45',n:'TWT pickup — Bluffs lobby',s:'exact time texted 48h out · snacks aboard',ek:'twt',lat:63.7387,lon:-148.8968,tel:'18006227275'},
+  {t:'20:30',n:'Drop-off → dinner on the strip',s:'Prospectors or Peak Spirits deck (2 min up)',lat:63.7386,lon:-148.9052},
+  {t:'23:00',n:'☄ Aurora watch №2',s:'same 12-min rule · sleep guilt-free if clouds',aur:1},
+ ]},
+ {d:6,label:'SUN 9/6 · NORTH TO THE RIDGE',color:'#3FE08F',base:{name:'The Overlook · Cleary Summit',lat:65.0461,lon:-147.4491},legs:[
+  {t:'09:45',n:'Depart · Into the Wild bus photo, Healy',s:'5-min pull-off',lat:63.8607,lon:-149.0083},
+  {t:'12:15',n:'Thai lunch, Fairbanks (Lemongrass)',s:'order takeout ×2 for tonight',lat:64.8378,lon:-147.7164},
+  {t:'13:30',n:'Running Reindeer Ranch',s:'flat forest walk with the herd · cookies after',ek:'rein',lat:64.9296,lon:-147.8365,tel:'19074554998'},
+  {t:'16:00',n:'Fred Meyer provisioning run',s:'breakfast extras · snacks · wine · quarters',lat:64.8366,lon:-147.7737},
+  {t:'17:30',n:'Up the Steese → The Overlook',s:'check-in 4p+ · sunset from the porch',lat:65.0461,lon:-147.4491,tel:'18337666237'},
+  {t:'22:00',n:'☄ Aurora watch №3 — from bed',s:'north glass · night lens on',aur:1},
+ ]},
+ {d:7,label:'MON 9/7 · SOAK → SUMMIT',color:'#4FC3F7',base:{name:'The Overlook · Cleary Summit',lat:65.0461,lon:-147.4491},legs:[
+  {t:'11:30',n:'Down to Chena Hot Springs Rd',s:'zero signal all road — queue everything',lat:65.0546,lon:-146.0567},
+  {t:'14:00',n:'Rock Lake soak (day pass ~$20)',s:'quarters lockers · own towels · water shoes',lat:65.0546,lon:-146.0567,tel:'19074518104'},
+  {t:'17:30',n:'Ice Museum + ice-glass appletini',s:'book slot at the desk on arrival',lat:65.0546,lon:-146.0567},
+  {t:'19:00',n:'Silver Gulch, Fox — veg dinner',s:'last food outpost · 12 min below summit',lat:64.9622,lon:-147.6193,tel:'19074522739'},
+  {t:'20:15',n:'Back on the ridge before sunset',s:'kettle on · tripod out',lat:65.0461,lon:-147.4491},
+  {t:'22:30',n:'☄ Aurora №4 — the marquee night',s:'darkest sky of the trip · stay up as late as it earns',aur:1},
+ ]},
+ {d:8,label:'TUE 9/8 · HOME',color:'#E0A23F',base:{name:'FAI → SFO',lat:64.8151,lon:-147.8562},legs:[
+  {t:'09:30',n:'Wake with the view · breakfast',s:'no alarm needed — flight buffer is 3 hrs'},
+  {t:'10:45',n:'Descend · drop car at FAI',s:'lockbox per Alaskan Car Rental email',lat:64.8151,lon:-147.8562,tel:'19073392000'},
+  {t:'12:03',n:'AS 331 → SEA → SFO ~8p',s:'left-side windows: the Alaska Range send-off',lat:64.8151,lon:-147.8562,tel:'18002527522'},
+ ]},
+];
+const PACK=[
+ {c:'Worn / weather',items:[['Merino base layers ×2','B'],['Fleece + packable down','B'],['TRUE waterproof shell + rain pants','B'],['Quick-dry pants (no jeans)','B'],['Beanie · gloves · wool socks ×3','B'],['Waterproof walking shoes','B'],['Town sneakers','B']]},
+ {c:'Cruise day (9/3)',items:[['Bonine / meclizine','B'],['Dry bag or ziplocks for phones','R']]},
+ {c:'Aurora kit',items:[['Phone tripod','R'],['Power bank + cables','R'],['HotHands ×4 pairs','A'],['Headlamp with red mode','R'],['Thermos','A']]},
+ {c:'Chena (9/7)',items:[['Swimsuits','B'],['Water shoes','B'],['Quarters for lockers','R'],['Own towels ×2','A']]},
+ {c:'Paper & power',items:[['IDs + park-pass receipt (screenshot)','B'],['All confirmations screenshotted','R'],['Cash for tips','R'],['Sapphire + Atmos cards','R']]},
+];
+const SOS=[
+ ['Alaskan Car Rental (roadside)','19073392000'],['K2 Aviation','19077332291'],
+ ['Denali tours / TWT','18006227275'],['Denali Bluffs Hotel','18552341970'],
+ ['The Overlook','18337666237'],['Chena Hot Springs','19074518104'],
+ ['Running Reindeer','19074554998'],['Alaska Airlines','18002527522'],
+ ['Windsong Lodge','19072245960'],['Emergency','911'],
+];
+/* ============ STATE ============ */
+const store={get:(k,f)=>{try{const v=localStorage.getItem('fu.'+k);return v==null?f:JSON.parse(v)}catch(e){return f}},set:(k,v)=>{try{localStorage.setItem('fu.'+k,JSON.stringify(v))}catch(e){}}};
+const EDITS=store.get('edits',{cruise:'08:00·verify',twt:'PM·48h txt',rein:'1:30p·book!',cookery:'7:45p·reserve'});
+const SET=Object.assign({owner:'R',theme:'auto',kp:3.5,cl:45,ai:''},store.get('set',{}));
+function saveSet(){store.set('set',SET);applyTheme();renderPack();renderVerdictRule();refreshSky(false);}
+/* ============ TABS/SHEETS ============ */
+function go(s){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on'));
+ document.getElementById('s-'+s).classList.add('on');
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.s===s));
+ if(s==='map') initMap(); window.scrollTo(0,0);}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.s));
+function openSheet(n){document.getElementById('ovl-'+n).classList.add('on');if(n==='settings')syncSettingsUI();if(n==='guide')bootChat();}
+function closeSheets(){document.querySelectorAll('.ovl').forEach(o=>o.classList.remove('on'));}
+/* ============ SUN (verified formula) ============ */
+function sunTimes(date,lat,lon){const rad=Math.PI/180,Jd=date/864e5+2440587.5-2451545,
+ n=Math.round(Jd-lon/360),Jt=n-lon/360,
+ M=((357.5291+0.98560028*Jt)%360+360)%360,
+ C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad),
+ L=(M+C+180+102.9372)%360,
+ Jtr=2451545+Jt+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad),
+ dec=Math.asin(Math.sin(L*rad)*Math.sin(23.4397*rad)),
+ toD=j=>new Date((j-2440587.5)*864e5),
+ hourAt=h0=>{const c=(Math.sin(h0*rad)-Math.sin(lat*rad)*Math.sin(dec))/(Math.cos(lat*rad)*Math.cos(dec));
+   return (c<-1||c>1)?null:Math.acos(c)/rad;};
+ const H=hourAt(-0.833),HD=hourAt(-8);
+ return {rise:H?toD(Jtr-H/360):null,set:H?toD(Jtr+H/360):null,dark:HD?toD(Jtr+HD/360):null};}
+const fmtT=d=>d?d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Anchorage'}).toLowerCase().replace(' ',''):'—';
+/* ============ NOW ENGINE ============ */
+const flat=[];TRIP.forEach(day=>day.legs.forEach(l=>flat.push({...l,when:T(day.d,l.t),day})));
+flat.sort((a,b)=>a.when-b.when);
+function nowLocal(){return new Date();}
+function baseFor(dt){for(let i=TRIP.length-1;i>=0;i--){if(dt>=T(TRIP[i].d,'04:00'))return TRIP[i];}return TRIP[0];}
+function tick(){const n=nowLocal();
+ document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Anchorage'});
+ const day=baseFor(n),st=sunTimes(n,day.base.lat,day.base.lon);
+ document.getElementById('nowdate').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:'America/Anchorage'}).toUpperCase()+' · '+day.base.name.toUpperCase();
+ document.getElementById('clocksub').textContent='Anchorage time · sun '+fmtT(st&&st.rise)+' – '+fmtT(st&&st.set);
+ const up=flat.filter(e=>e.when>n).slice(0,3);
+ document.getElementById('nextlist').innerHTML= up.length? up.map((e,i)=>{
+   const mins=Math.round((e.when-n)/6e4),cd=mins<90?mins+' min':(mins<2880?Math.round(mins/60)+' hr':Math.round(mins/1440)+' days');
+   return `<div style="padding:${i?8:2}px 0 ${i<up.length-1?8:2}px;${i?'border-top:1px dashed var(--line)':''}">
+   <div class="t">${e.when.toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit',timeZone:'America/Anchorage'})} · <span class="cd">in ${cd}</span></div>
+   <div class="n">${e.n}</div><div class="dimt">${e.s||''}</div></div>`;}).join('')
+  : '<div class="dimt">Trip complete. Lights in the camera roll. 🎞</div>';
+ const list=baseFor(n).legs;
+ document.getElementById('todaylist').innerHTML=list.map(l=>
+   `<div class="row" style="padding:4px 0"><span class="mono dimt" style="width:64px;flex:none">${l.ek?(EDITS[l.ek]||l.t):l.t}</span><span style="flex:1;font-size:13px">${l.aur?'☄ ':''}${l.n}</span></div>`).join('');
+}
+setInterval(tick,30000);
+/* ============ SKY ENGINE ============ */
+async function refreshSky(force){
+ const n=nowLocal(),day=baseFor(n),cacheKey='sky.'+day.d;
+ let data=store.get(cacheKey,null);
+ const stale=!data||(Date.now()-data.ts>55*60*1000);
+ if((force||stale)&&navigator.onLine){
+  try{
+   const [kpNow,kpFc,met]=await Promise.all([
+    fetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json').then(r=>r.json()).catch(()=>null),
+    fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json').then(r=>r.json()).catch(()=>null),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${day.base.lat}&longitude=${day.base.lon}&hourly=cloudcover&forecast_days=2&timezone=America%2FAnchorage`).then(r=>r.json()).catch(()=>null)
+   ]);
+   let kpC=null;if(kpNow&&kpNow.length){const last=kpNow[kpNow.length-1];kpC=parseFloat(last.kp_index??last.estimated_kp??last[1]);}
+   let kpT=kpC;if(kpFc&&kpFc.length>1){const rows=kpFc.slice(1);
+     const tonight=rows.filter(r=>{const t=new Date(String(r[0]).replace(' ','T')+'Z');const h=(t-n)/36e5;return h>-2&&h<14;});
+     const mx=Math.max(0,...tonight.map(r=>parseFloat(r[1])||0));if(mx>0)kpT=Math.max(kpT||0,mx);}
+   let cl=null;if(met&&met.hourly){const times=met.hourly.time,cc=met.hourly.cloudcover;const idx=[];
+     times.forEach((tt,i)=>{const h=new Date(tt+':00'+TZ);const dh=(h-n)/36e5;const hr=h.getHours();
+       if(dh>-1&&dh<12&&(hr>=21||hr<=2))idx.push(cc[i]);});
+     if(idx.length)cl=Math.round(idx.reduce((a,b)=>a+b,0)/idx.length);}
+   if(kpC!=null||cl!=null){data={ts:Date.now(),kpC,kpT,cl};store.set(cacheKey,data);}
+  }catch(e){}
+ }
+ renderSky(data,day);
+}
+function renderSky(d,day){
+ const st=sunTimes(nowLocal(),day.base.lat,day.base.lon);
+ document.getElementById('skybase').textContent=day.base.name;
+ document.getElementById('gdk').textContent=fmtT(st&&st.dark);
+ const kp=d?d.kpT:null,cl=d?d.cl:null;
+ document.getElementById('gkp').textContent=(kp!=null&&isFinite(kp))?kp.toFixed(1):'—';
+ document.getElementById('gcl').textContent=cl!=null?cl+'%':'—';
+ document.getElementById('skyage').textContent=d?('data as of '+new Date(d.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+(navigator.onLine?'':' · OFFLINE CACHE')):'no data yet — refresh when you have bars';
+ let v='—',c='var(--sleep)',s='awaiting data';
+ if(kp!=null&&cl!=null){
+   if(kp>=SET.kp&&cl<=SET.cl){v='GO';c='var(--go)';s='Suit up. Sky says yes.';}
+   else if(kp>=2.3&&cl<=75){v='MAYBE';c='var(--maybe)';s='Set an alarm for a window check.';}
+   else{v='SLEEP';c='var(--sleep)';s=cl>75?'Clouds own tonight. Rest is ammo.':'Quiet sun. Rest is ammo.';}
+ }
+ window._sky={v,kp,cl,dark:fmtT(st&&st.dark)};
+ [['lampv','lamps','lampmini'],['bigv','bigs','lampbig']].forEach(([tv,ts,lp])=>{
+  document.getElementById(tv).textContent=(lp==='lampmini'?'SKY: ':'')+v;
+  document.getElementById(ts).textContent=s;
+  document.getElementById(lp).querySelector('.dot').style.color=c;});
+ document.getElementById('gokit').style.display=(v==='GO'||v==='MAYBE')?'block':'none';
+}
+function renderVerdictRule(){document.getElementById('verdictrule').textContent=
+ `GO = Kp ≥ ${SET.kp} and cloud ≤ ${SET.cl}% · MAYBE = Kp ≥ 2.3 and cloud ≤ 75% · else SLEEP. Sources: NOAA SWPC live Kp + forecast, Open-Meteo clouds for tonight's exact base. Verdict caches for offline ridges. Tune thresholds in Settings.`;}
+function toggleNV(){document.documentElement.classList.remove('day');
+ document.documentElement.classList.toggle('nv');
+ document.getElementById('nvbtn').textContent=document.documentElement.classList.contains('nv')?'⚪ Normal':'🔴 Night lens';
+ rebuildTiles();}
+/* ============ DAYS ============ */
+function renderDays(){
+ document.getElementById('dayscroll').innerHTML=TRIP.map(day=>`
+ <div class="day"><div class="dh"><b style="color:${day.color}">● ${day.label}</b><span>${day.base.name}</span></div>
+ ${day.legs.map(l=>{const t=l.ek?(EDITS[l.ek]||l.t):l.t;
+  return `<div class="leg"><div class="lt ${l.ek?'edit':''}" ${l.ek?`onclick="editT('${l.ek}')"`:''}>${t}</div>
+  <div><div class="ln">${l.aur?'☄ ':''}${l.n}</div><div class="ls">${l.s||''}</div></div>
+  <div class="act">${l.lat?`<a class="iconb" aria-label="Navigate" href="https://maps.apple.com/?daddr=${l.lat},${l.lon}&q=${encodeURIComponent(l.n)}">➤</a>`:''}
+  ${l.tel?`<a class="iconb" aria-label="Call" href="tel:+${l.tel}">✆</a>`:''}</div></div>`;}).join('')}</div>`).join('');
+}
+function editT(k){const v=prompt('Correct this from your confirmation:',EDITS[k]||'');if(v!=null){EDITS[k]=v.trim();store.set('edits',EDITS);renderDays();tick();}}
+/* ============ MAP ============ */
+let map,tileLayer;
+function tileScheme(){return document.documentElement.classList.contains('day')?'light_all':'dark_all';}
+function rebuildTiles(){if(!map)return;if(tileLayer)map.removeLayer(tileLayer);
+ tileLayer=L.tileLayer(`https://{s}.basemaps.cartocdn.com/${tileScheme()}/{z}/{x}/{y}{r}.png`,
+  {attribution:'© OpenStreetMap · © CARTO',maxZoom:15}).addTo(map);}
+function initMap(){if(map){setTimeout(()=>map.invalidateSize(),50);return;}
+ map=L.map('map',{zoomControl:false}).setView([63.2,-148.9],5);
+ rebuildTiles();
+ TRIP.forEach(day=>{const pts=day.legs.filter(l=>l.lat).map(l=>[l.lat,l.lon]);
+  if(pts.length>1)L.polyline(pts,{color:day.color,weight:3,opacity:.75,dashArray:'6 7'}).addTo(map);
+  day.legs.filter(l=>l.lat).forEach(l=>{
+   L.circleMarker([l.lat,l.lon],{radius:7,color:day.color,weight:2,fillColor:day.color,fillOpacity:.35}).addTo(map)
+    .bindPopup(`<div class="mappop"><b>${l.n}</b><div class="dimt">${day.label} · ${l.t}</div>
+    <a class="btn" href="https://maps.apple.com/?daddr=${l.lat},${l.lon}&q=${encodeURIComponent(l.n)}">Navigate ➤</a>
+    ${l.tel?` <a class="btn" href="tel:+${l.tel}">Call</a>`:''}</div>`);});});
+ document.getElementById('maplegend').innerHTML=TRIP.map(d=>`<span class="chip" style="border-color:${d.color};color:${d.color}">${d.label.split(' · ')[0]}</span>`).join('');
+}
+/* ============ PACK ============ */
+function renderPack(){const st=store.get('pack',{});
+ document.getElementById('whoami').textContent='THIS UNIT: '+SET.owner;
+ document.getElementById('packlist').innerHTML=PACK.map((cat,ci)=>{
+  const done=cat.items.filter((it,ii)=>st[ci+'.'+ii]).length;
+  return `<div class="pcat"><div class="row"><b>${cat.c}</b><span class="mono dimt">${done}/${cat.items.length}</span></div>
+  <div class="prog"><i style="width:${100*done/cat.items.length}%"></i></div>
+  ${cat.items.map((it,ii)=>{const k=ci+'.'+ii,ck=st[k],mine=it[1]==='B'||it[1]===SET.owner;
+   return `<div class="pk ${ck?'done':''} ${mine?'mine':''}"><input type="checkbox" id="p${k}" ${ck?'checked':''} onchange="tickPack('${k}',this.checked)">
+   <label for="p${k}" style="flex:1">${it[0]}</label><span class="who">${it[1]==='B'?'BOTH':it[1]}</span></div>`;}).join('')}</div>`;}).join('');}
+function tickPack(k,v){const st=store.get('pack',{});st[k]=v;store.set('pack',st);renderPack();}
+/* ============ SOS ============ */
+function renderSOS(){document.getElementById('soslist').innerHTML=
+ `<div class="card">${SOS.map(([n,t])=>`<div class="row" style="padding:7px 0;border-bottom:1px dashed var(--line)">
+  <span style="font-size:13.5px;font-weight:600">${n}</span><a class="btn" href="tel:+${t}">✆ ${t==='911'?'911':t.replace(/^1/,'').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3')}</a></div>`).join('')}</div>`;
+ const el=document.getElementById('confnotes');el.value=store.get('conf','');el.oninput=()=>store.set('conf',el.value);}
+/* ============ ICS ============ */
+function buildICS(){const dt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+ let ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//FieldUnit//AK//EN\r\n';
+ flat.forEach((e,i)=>{const end=new Date(e.when.getTime()+60*60*1000);
+  ics+=`BEGIN:VEVENT\r\nUID:fu-${i}@ak\r\nDTSTART:${dt(e.when)}\r\nDTEND:${dt(end)}\r\nSUMMARY:${(e.aur?'☄ ':'')+e.n.replace(/,/g,'')}\r\nDESCRIPTION:${(e.s||'').replace(/,/g,';')}\r\n${e.lat?`LOCATION:${e.lat} ${e.lon}\r\n`:''}BEGIN:VALARM\r\nTRIGGER:-PT45M\r\nACTION:DISPLAY\r\nDESCRIPTION:${e.n}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;});
+ return ics+'END:VCALENDAR';}
+async function shareICS(){const ics=buildICS();
+ const file=new File([ics],'alaska-trip.ics',{type:'text/calendar'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){
+   try{await navigator.share({files:[file],title:'Alaska trip'});return;}catch(e){}}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='alaska-trip.ics';a.click();}
+/* ============ GUIDE (AI) ============ */
+const CHAT=[];
+function bootChat(){document.getElementById('aimode').textContent=SET.ai?'Claude · live':'offline guide';
+ if(!CHAT.length)pushMsg('a',SET.ai?'Guide online. Ask me anything about the trip — tonight\'s call, timing, packing, plan changes.':'Offline guide ready (no AI endpoint set — add one in Settings for full Claude). I can still answer: "what\'s next", "tonight?", "pack for tomorrow", "call <place>".');}
+function pushMsg(w,t){CHAT.push({w,t});const el=document.getElementById('chatlog');
+ el.innerHTML=CHAT.map(m=>`<div class="msg ${m.w}">${m.t}</div>`).join('');el.scrollTop=el.scrollHeight;}
+function localGuide(q){q=q.toLowerCase();const n=nowLocal(),day=baseFor(n),sky=window._sky||{};
+ if(/next|now|move/.test(q)){const up=flat.filter(e=>e.when>n)[0];
+   return up?`Next: ${up.n} — ${up.when.toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit',timeZone:'America/Anchorage'})}. ${up.s||''}`:'Trip complete.';}
+ if(/tonight|aurora|sky|lights/.test(q))return `Tonight at ${day.base.name}: verdict ${sky.v||'—'} (Kp ${sky.kp??'—'}, cloud ${sky.cl??'—'}%). Dark from ${sky.dark||'—'}. ${sky.v==='GO'?'Get dressed.':sky.v==='MAYBE'?'Alarm + window check.':'Rest is ammo.'}`;
+ if(/pack|bring|wear/.test(q))return 'Open PACK — your items glow green. Tonight-critical: layers, HotHands, headlamp (red), tripod, thermos.';
+ if(/call|phone/.test(q)){const hit=SOS.find(([nm])=>q.includes(nm.split(' ')[0].toLowerCase()));
+   return hit?`${hit[0]}: tap SOS tab to call ${hit[1]}.`:'All numbers live in the SOS tab.';}
+ if(/plan|today/.test(q))return day.legs.map(l=>`${l.t} ${l.n}`).join('\n');
+ return 'Offline guide covers: next / tonight / pack / today / call <place>. For everything else, add the AI endpoint in Settings.';}
+async function sendChat(){const inp=document.getElementById('chatin'),q=inp.value.trim();if(!q)return;inp.value='';pushMsg('u',q);
+ if(!SET.ai){pushMsg('a',localGuide(q));return;}
+ pushMsg('a','…');
+ try{
+  const sys=`You are the expedition guide for R & A's Alaska trip Sept 2–8 2026. Be concise, decisive, warm. Current base: ${baseFor(nowLocal()).base.name}. Sky: ${JSON.stringify(window._sky||{})}. Itinerary: ${TRIP.map(d=>d.label+': '+d.legs.map(l=>l.t+' '+l.n).join('; ')).join(' | ')}`;
+  const hist=CHAT.filter(m=>m.t!=='…').slice(-8).map(m=>({role:m.w==='u'?'user':'assistant',content:m.t}));
+  const r=await fetch(SET.ai.replace(/\/$/,'')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system:sys,messages:hist})});
+  const j=await r.json();CHAT.pop();pushMsg('a',j.reply||j.error||'No reply — check the proxy.');
+ }catch(e){CHAT.pop();pushMsg('a','Guide unreachable (no signal or proxy down). Falling back:\n'+localGuide(q));}}
+/* ============ SETTINGS ============ */
+function syncSettingsUI(){
+ document.querySelectorAll('#ownerseg button').forEach(b=>{b.classList.toggle('on',b.dataset.v===SET.owner);b.onclick=()=>{SET.owner=b.dataset.v;saveSet();syncSettingsUI();};});
+ document.querySelectorAll('#themeseg button').forEach(b=>{b.classList.toggle('on',b.dataset.v===SET.theme);b.onclick=()=>{SET.theme=b.dataset.v;saveSet();syncSettingsUI();};});
+ const kp=document.getElementById('kpthr'),cl=document.getElementById('clthr');
+ kp.value=SET.kp;cl.value=SET.cl;
+ document.getElementById('kpv').textContent=SET.kp;document.getElementById('clv').textContent=SET.cl;
+ kp.oninput=()=>{SET.kp=parseFloat(kp.value);document.getElementById('kpv').textContent=SET.kp;};kp.onchange=saveSet;
+ cl.oninput=()=>{SET.cl=parseInt(cl.value);document.getElementById('clv').textContent=SET.cl;};cl.onchange=saveSet;
+ const ai=document.getElementById('aiurl');ai.value=SET.ai;ai.onchange=()=>{SET.ai=ai.value.trim();saveSet();};}
+/* ============ THEME + OFFLINE + BOOT ============ */
+function applyTheme(){const h=new Date().getHours();
+ const dark = SET.theme==='dark' || (SET.theme==='auto' && (h>=20||h<8));
+ if(!document.documentElement.classList.contains('nv'))
+   document.documentElement.classList.toggle('day',!dark);
+ document.getElementById('themebtn').textContent = SET.theme==='auto'?'◐ Auto':(SET.theme==='dark'?'● Dark':'○ Day');
+ rebuildTiles();}
+function cycleTheme(){SET.theme=SET.theme==='auto'?'dark':(SET.theme==='dark'?'day':'auto');saveSet();}
+async function prepareOffline(){const b=document.getElementById('prepbtn');b.textContent='Preparing…';
+ try{await refreshSky(true);
+  if('caches' in window){const c=await caches.open('fu-tiles');
+   const zs=[6,7,8,9];const pts=flat.filter(e=>e.lat);let n=0;
+   for(const scheme of ['dark_all','light_all'])
+   for(const z of zs)for(const p of pts){
+     const x=Math.floor((p.lon+180)/360*Math.pow(2,z)),
+     y=Math.floor((1-Math.log(Math.tan(p.lat*Math.PI/180)+1/Math.cos(p.lat*Math.PI/180))/Math.PI)/2*Math.pow(2,z));
+     for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+       const u=`https://a.basemaps.cartocdn.com/${scheme}/${z}/${x+dx}/${y+dy}.png`;
+       if(!(await c.match(u))){try{const r=await fetch(u,{mode:'cors'});if(r.ok){await c.put(u,r);n++;}}catch(e){}}
+     }}
+   b.textContent=`Offline pack ready · ${n} new tiles + sky cached ✓`;}
+  else b.textContent='Sky cached ✓ (host over HTTPS for map tiles)';
+ }catch(e){b.textContent='Partial pack — retry with better signal';}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(()=>{
+  document.getElementById('swstat').textContent='offline: ready ✓ · v2.0 · works with zero bars';
+ }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.0';});}
+else document.getElementById('swstat').textContent='offline: not supported here · v2.0';
+applyTheme();renderDays();renderPack();renderSOS();renderVerdictRule();tick();refreshSky(false);
+setInterval(applyTheme,10*60*1000);
+</script>
+</body>
+</html>
