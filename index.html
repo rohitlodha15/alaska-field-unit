@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
+html{-webkit-text-size-adjust:100%}
 :root{
   --bg:#0B1512; --panel:#122019; --panel2:#0F1B15; --line:#1E332A;
   --ink:#E7EFE9; --dim:#8FA79B; --mono:ui-monospace,'SF Mono',Menlo,monospace;
@@ -23,9 +24,9 @@ html.day{ --bg:#EEF3F1; --panel:#F7FAF8; --panel2:#E9F0EC; --line:#C9D6D0; --ink
 html.nv{ --bg:#140505; --panel:#1D0808; --panel2:#170606; --line:#3A1010;
   --ink:#FF6B57; --dim:#A63C2E; --go:#FF7A5C; --maybe:#FF7A5C; --sleep:#7A2A1E; --bad:#FF7A5C; }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{touch-action:manipulation}
+button,.btn,.tab,a,label,input,select,.chip,.lamp,.who,.del{touch-action:manipulation}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;
-  padding-top:var(--sat);overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+  padding-top:var(--sat);-webkit-font-smoothing:antialiased}
 #app{max-width:560px;margin:0 auto;padding:12px 14px calc(86px + var(--sab))}
 .screen{display:none}.screen.on{display:block;animation:fade .18s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
@@ -94,7 +95,7 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
 /* overlays */
 .ovl{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 60%,transparent);backdrop-filter:blur(6px);z-index:2000;display:none}
 .ovl.on{display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:16px 16px calc(16px + var(--sab))}
+.sheet{-webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:16px 16px calc(16px + var(--sab))}
 .sheet h2{font-family:var(--serif);font-size:18px;margin-bottom:8px}
 .set{padding:10px 0;border-bottom:1px dashed var(--line)}
 .set label{font-size:13.5px;font-weight:600;display:block;margin-bottom:6px}
@@ -102,7 +103,7 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
 .seg{display:flex;gap:6px}.seg button{flex:1;padding:8px}
 .seg button.on{background:var(--go);color:#06130C;border-color:transparent}
 /* guide chat */
-#chatlog{display:flex;flex-direction:column;gap:8px;min-height:30vh;max-height:52vh;overflow:auto;padding:4px 0}
+#chatlog{-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px;min-height:30vh;max-height:52vh;overflow:auto;padding:4px 0}
 .msg{max-width:86%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.4;white-space:pre-wrap}
 .msg.u{align-self:flex-end;background:var(--go);color:#06130C;border-bottom-right-radius:4px}
 .msg.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
@@ -566,9 +567,9 @@ async function prepareOffline(){const b=document.getElementById('prepbtn');b.tex
   else b.textContent='Sky cached ✓ (host over HTTPS for map tiles)';
  }catch(e){b.textContent='Partial pack — retry with better signal';}}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(()=>{
-  document.getElementById('swstat').textContent='offline: ready ✓ · v2.5 · works with zero bars';
- }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.5';});}
-else document.getElementById('swstat').textContent='offline: not supported here · v2.5';
+  document.getElementById('swstat').textContent='offline: ready ✓ · v2.6 · works with zero bars';
+ }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.6';});}
+else document.getElementById('swstat').textContent='offline: not supported here · v2.6';
 applyTheme();renderDays();renderPack();renderSOS();renderVerdictRule();tick();refreshSky(false);
 setInterval(applyTheme,10*60*1000);
 </script>

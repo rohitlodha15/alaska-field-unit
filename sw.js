@@ -1,5 +1,5 @@
 /* Field Unit service worker — cache-first shell, stale-while-revalidate data */
-const SHELL='fu-shell-v6', TILES='fu-tiles', DATA='fu-data';
+const SHELL='fu-shell-v7', TILES='fu-tiles', DATA='fu-data';
 const CORE=['./','./index.html','./manifest.webmanifest',
  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'];
