@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Alaska">
+<meta name="theme-color" content="#0B1512">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
@@ -31,7 +32,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15p
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--go);outline-offset:2px;border-radius:6px}
 h1{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.2px}
-.kick{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.kick{font-family:var(--mono);font-size:10px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
 .card.sub{background:var(--panel2)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -51,20 +52,20 @@ a{color:inherit}
 .tab .ico{font-size:18px;display:block;margin-bottom:2px;filter:grayscale(1) opacity(.6)}
 .tab.on{color:var(--ink)}.tab.on .ico{filter:none}
 .hero{padding:16px 4px 6px;position:relative}
-#gear{position:absolute;right:0;top:14px;font-size:20px;background:none;border:none;color:var(--dim);min-height:auto;padding:6px}
+#gear{position:absolute;right:0;top:10px;z-index:5;font-size:20px;background:none;border:none;color:var(--dim);min-height:auto;padding:6px}
 #clock{font-family:var(--mono);font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1}
 .lamp{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;border:1px solid var(--line);margin:10px 0;background:var(--panel);cursor:pointer}
 .lamp .dot{width:46px;height:46px;border-radius:50%;flex:none;box-shadow:0 0 22px 2px currentColor;background:currentColor}
-.lamp .v{font-family:var(--mono);font-weight:800;font-size:20px;letter-spacing:.06em}
+.lamp .v{font-family:var(--mono);font-weight:800;font-size:20px;letter-spacing:.06em;overflow-wrap:anywhere}
 .next .t{font-family:var(--mono);font-size:12px;color:var(--dim)}
 .next .n{font-size:16px;font-weight:650;margin:2px 0}
 .cd{font-family:var(--mono);color:var(--go);font-size:12px}
 .day{border:1px solid var(--line);border-radius:16px;background:var(--panel);margin:10px 0;overflow:hidden}
-.dh{display:flex;justify-content:space-between;gap:8px;padding:11px 13px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
+.dh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
 .dh b{color:var(--ink)}
 .leg{display:grid;grid-template-columns:58px 1fr auto;gap:8px;padding:10px 13px;border-top:1px dashed var(--line);align-items:center}
 .leg:first-of-type{border-top:none}
-.leg .lt{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.leg .lt{font-family:var(--mono);font-size:11px;color:var(--dim);overflow-wrap:anywhere}
 .leg .lt.edit{color:var(--maybe);text-decoration:underline dotted;cursor:pointer}
 .leg .ln{font-size:13.5px;font-weight:600}
 .leg .ls{font-size:11.5px;color:var(--dim)}
@@ -81,7 +82,8 @@ a{color:inherit}
 .pk{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px dashed var(--line)}
 .pk input{width:22px;height:22px;accent-color:var(--go)}
 .pk.done label{opacity:.4;text-decoration:line-through}
-.pk .who{font-family:var(--mono);font-size:9px;border:1px solid var(--line);border-radius:5px;padding:2px 5px;color:var(--dim)}
+.pk .who{font-family:var(--mono);font-size:9px;border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--dim);background:var(--panel2);min-height:auto;cursor:pointer}
+.pk .del{border:none;background:none;color:var(--bad);font-size:13px;padding:4px 6px;min-height:auto}
 .pk.mine .who{border-color:var(--go);color:var(--go)}
 .pcat{margin-top:14px}
 .prog{height:6px;border-radius:4px;background:var(--panel2);overflow:hidden;margin:6px 0 2px}
@@ -113,7 +115,7 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
 
 <section class="screen on" id="s-now">
   <div class="hero">
-    <div class="kick" id="nowdate">ALASKA · FIELD UNIT</div>
+    <div class="kick" id="nowdate" style="padding-right:40px">ALASKA · FIELD UNIT</div>
     <div id="clock">--:--</div>
     <div class="dimt mono" id="clocksub">Anchorage time · sun --</div>
     <button id="gear" aria-label="Settings" onclick="openSheet('settings')">⚙︎</button>
@@ -171,7 +173,7 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
 
 <section class="screen" id="s-pack">
   <div class="row"><h1>Packing</h1><span class="chip" id="whoami"></span></div>
-  <div class="dimt">Checks save on this phone. Your items glow green.</div>
+  <div class="dimt">Checks save on this phone · your items glow green · ＋ adds · tap a custom name to rename · tap the R/A/BOTH tag to reassign.</div>
   <div id="packlist"></div>
 </section>
 
@@ -209,6 +211,8 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
     <input type="range" min="30" max="80" step="5" id="clthr"></div>
   <div class="set"><label>AI Guide endpoint (Railway proxy URL)</label>
     <input class="note" id="aiurl" placeholder="https://your-proxy.up.railway.app">
+    <label style="margin-top:10px">Guide token (matches FU_TOKEN on Railway)</label>
+    <input class="note" id="aitok" placeholder="paste the shared token">
     <div class="dimt" style="margin-top:4px">Deploy the /proxy folder to Railway with your Anthropic key — README has the 3-minute steps. Leave blank to use the offline guide.</div></div>
   <div class="set"><button class="btn wide" onclick="if(confirm('Erase all local checks, edits and settings?')){localStorage.clear();location.reload()}">Reset this unit</button></div>
   <button class="btn wide go" onclick="closeSheets()">Done</button>
@@ -295,7 +299,7 @@ const SOS=[
 /* ============ STATE ============ */
 const store={get:(k,f)=>{try{const v=localStorage.getItem('fu.'+k);return v==null?f:JSON.parse(v)}catch(e){return f}},set:(k,v)=>{try{localStorage.setItem('fu.'+k,JSON.stringify(v))}catch(e){}}};
 const EDITS=store.get('edits',{cruise:'08:00·verify',twt:'PM·48h txt',rein:'1:30p·book!',cookery:'7:45p·reserve'});
-const SET=Object.assign({owner:'R',theme:'auto',kp:3.5,cl:45,ai:''},store.get('set',{}));
+const SET=Object.assign({owner:'R',theme:'auto',kp:3.5,cl:45,ai:'',tok:''},store.get('set',{}));
 function saveSet(){store.set('set',SET);applyTheme();renderPack();renderVerdictRule();refreshSky(false);}
 /* ============ TABS/SHEETS ============ */
 function go(s){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on'));
@@ -323,12 +327,16 @@ const fmtT=d=>d?d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',ti
 const flat=[];TRIP.forEach(day=>day.legs.forEach(l=>flat.push({...l,when:T(day.d,l.t),day})));
 flat.sort((a,b)=>a.when-b.when);
 function nowLocal(){return new Date();}
+function tripState(n){return n<T(2,'00:01')?'pre':(n>T(8,'23:59')?'post':'live');}
 function baseFor(dt){for(let i=TRIP.length-1;i>=0;i--){if(dt>=T(TRIP[i].d,'04:00'))return TRIP[i];}return TRIP[0];}
-function tick(){const n=nowLocal();
+function tick(){const n=nowLocal(),stt=tripState(n);
  document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Anchorage'});
  const day=baseFor(n),st=sunTimes(n,day.base.lat,day.base.lon);
- document.getElementById('nowdate').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:'America/Anchorage'}).toUpperCase()+' · '+day.base.name.toUpperCase();
- document.getElementById('clocksub').textContent='Anchorage time · sun '+fmtT(st&&st.rise)+' – '+fmtT(st&&st.set);
+ const dstr=n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:'America/Anchorage'}).toUpperCase();
+ const tminus=Math.ceil((T(2,'09:03')-n)/864e5);
+ document.getElementById('nowdate').textContent = stt==='pre' ? (dstr+' · T-MINUS '+tminus+' DAY'+(tminus===1?'':'S'))
+   : stt==='post' ? (dstr+' · TRIP COMPLETE') : (dstr+' · '+day.base.name.toUpperCase());
+ document.getElementById('clocksub').textContent='Anchorage time · '+(stt==='pre'?'Day-1 sun preview ':'sun ')+fmtT(st&&st.rise)+' – '+fmtT(st&&st.set);
  const up=flat.filter(e=>e.when>n).slice(0,3);
  document.getElementById('nextlist').innerHTML= up.length? up.map((e,i)=>{
    const mins=Math.round((e.when-n)/6e4),cd=mins<90?mins+' min':(mins<2880?Math.round(mins/60)+' hr':Math.round(mins/1440)+' days');
@@ -337,8 +345,12 @@ function tick(){const n=nowLocal();
    <div class="n">${e.n}</div><div class="dimt">${e.s||''}</div></div>`;}).join('')
   : '<div class="dimt">Trip complete. Lights in the camera roll. 🎞</div>';
  const list=baseFor(n).legs;
- document.getElementById('todaylist').innerHTML=list.map(l=>
+ const rows=list.map(l=>
    `<div class="row" style="padding:4px 0"><span class="mono dimt" style="width:64px;flex:none">${l.ek?(EDITS[l.ek]||l.t):l.t}</span><span style="flex:1;font-size:13px">${l.aur?'☄ ':''}${l.n}</span></div>`).join('');
+ document.getElementById('todaylist').innerHTML = stt==='pre'
+  ? `<div class="dimt" style="margin-bottom:6px">Prep window: offline pack on both phones · calendar import · buy Bonine + HotHands · screenshot every confirmation.</div>
+     <div class="kick" style="margin:8px 0 4px">DAY 1 PREVIEW · WED 9/2</div>`+rows
+  : stt==='post' ? '<div class="dimt">Trip complete. Lights in the camera roll. 🎞</div>' : rows;
 }
 setInterval(tick,30000);
 /* ============ SKY ENGINE ============ */
@@ -381,12 +393,13 @@ async function skyRefreshUI(btn){
 }
 function renderSky(d,day){
  const st=sunTimes(nowLocal(),day.base.lat,day.base.lon);
- document.getElementById('skybase').textContent=day.base.name;
+ const _stt=tripState(nowLocal());
+ document.getElementById('skybase').textContent=day.base.name+(_stt==='pre'?' · Day-1 PREVIEW':'');
  document.getElementById('gdk').textContent=fmtT(st&&st.dark);
  const kp=d?d.kpT:null,cl=d?d.cl:null;
  document.getElementById('gkp').textContent=(kp!=null&&isFinite(kp))?kp.toFixed(1):'—';
  document.getElementById('gcl').textContent=cl!=null?cl+'%':'—';
- document.getElementById('skyage').textContent=d?('data as of '+new Date(d.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+(navigator.onLine?'':' · OFFLINE CACHE')):'no data yet — refresh when you have bars';
+ document.getElementById('skyage').textContent=(_stt==='pre'?'PRE-TRIP PREVIEW · ':'')+(d?('data as of '+new Date(d.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+(navigator.onLine?'':' · OFFLINE CACHE')):'no data yet — refresh when you have bars');
  let v='—',c='var(--sleep)',s='awaiting data';
  if(kp!=null&&cl!=null){
    if(kp>=SET.kp&&cl<=SET.cl){v='GO';c='var(--go)';s='Suit up. Sky says yes.';}
@@ -396,7 +409,7 @@ function renderSky(d,day){
  window._sky={v,kp,cl,dark:fmtT(st&&st.dark)};
  [['lampv','lamps','lampmini'],['bigv','bigs','lampbig']].forEach(([tv,ts,lp])=>{
   document.getElementById(tv).textContent=(lp==='lampmini'?'SKY: ':'')+v;
-  document.getElementById(ts).textContent=s;
+  document.getElementById(ts).textContent=(tripState(nowLocal())==='pre'&&lp==='lampmini')?('Day-1 base preview · '+s):s;
   document.getElementById(lp).querySelector('.dot').style.color=c;});
  document.getElementById('gokit').style.display=(v==='GO'||v==='MAYBE')?'block':'none';
 }
@@ -447,16 +460,35 @@ function toggleDay(i){if(HID.has(i)){HID.delete(i);dayLayers[i]&&dayLayers[i].ad
  store.set('hiddays',[...HID]);renderLegend();}
 function dayAll(){HID.forEach(i=>dayLayers[i]&&dayLayers[i].addTo(map));HID.clear();store.set('hiddays',[]);renderLegend();}
 /* ============ PACK ============ */
-function renderPack(){const st=store.get('pack',{});
+function renderPack(){const st=store.get('pack',{}),whoOv=store.get('packwho',{}),cx=store.get('packx',{});
  document.getElementById('whoami').textContent='THIS UNIT: '+SET.owner;
  document.getElementById('packlist').innerHTML=PACK.map((cat,ci)=>{
-  const done=cat.items.filter((it,ii)=>st[ci+'.'+ii]).length;
-  return `<div class="pcat"><div class="row"><b>${cat.c}</b><span class="mono dimt">${done}/${cat.items.length}</span></div>
-  <div class="prog"><i style="width:${100*done/cat.items.length}%"></i></div>
-  ${cat.items.map((it,ii)=>{const k=ci+'.'+ii,ck=st[k],mine=it[1]==='B'||it[1]===SET.owner;
-   return `<div class="pk ${ck?'done':''} ${mine?'mine':''}"><input type="checkbox" id="p${k}" ${ck?'checked':''} onchange="tickPack('${k}',this.checked)">
-   <label for="p${k}" style="flex:1">${it[0]}</label><span class="who">${it[1]==='B'?'BOTH':it[1]}</span></div>`;}).join('')}</div>`;}).join('');}
+  const rows=[...cat.items.map((it,ii)=>({k:ci+'.'+ii,n:it[0],who:whoOv[ci+'.'+ii]||it[1],cust:0,ci})),
+              ...((cx[ci]||[]).map(c=>({k:'c'+c.id,n:c.n,who:c.who,cust:1,id:c.id,ci})))];
+  const done=rows.filter(r=>st[r.k]).length;
+  return `<div class="pcat"><div class="row"><b>${cat.c}</b><span class="mono dimt">${done}/${rows.length}</span></div>
+  <div class="prog"><i style="width:${rows.length?100*done/rows.length:0}%"></i></div>
+  ${rows.map(r=>{const mine=r.who==='B'||r.who===SET.owner;
+   return `<div class="pk ${st[r.k]?'done':''} ${mine?'mine':''}"><input type="checkbox" id="p${r.k}" ${st[r.k]?'checked':''} onchange="tickPack('${r.k}',this.checked)">
+   <label for="p${r.k}" style="flex:1" ${r.cust?`onclick="event.preventDefault();renamePack(${r.ci},${r.id})"`:''}>${r.n}</label>
+   <button class="who" onclick="cycleWho(${r.ci},'${r.k}',${r.cust?r.id:0})">${r.who==='B'?'BOTH':r.who}</button>${r.cust?`<button class="del" aria-label="Delete" onclick="delPack(${r.ci},${r.id})">✕</button>`:''}</div>`;}).join('')}
+  <button class="btn" style="margin-top:8px;font-size:12.5px;padding:8px 12px;min-height:38px" onclick="addPack(${ci})">＋ Add item</button></div>`;}).join('');}
 function tickPack(k,v){const st=store.get('pack',{});st[k]=v;store.set('pack',st);renderPack();}
+function addPack(ci){const n=prompt('New item for "'+PACK[ci].c+'":');if(!n||!n.trim())return;
+ const cx=store.get('packx',{});(cx[ci]=cx[ci]||[]).push({id:Date.now(),n:n.trim(),who:SET.owner});store.set('packx',cx);renderPack();}
+function renamePack(ci,id){const cx=store.get('packx',{});const it=(cx[ci]||[]).find(x=>x.id===id);if(!it)return;
+ const n=prompt('Rename (empty = delete):',it.n);if(n===null)return;
+ if(!n.trim())return delPack(ci,id);
+ it.n=n.trim();store.set('packx',cx);renderPack();}
+function delPack(ci,id){const cx=store.get('packx',{});cx[ci]=(cx[ci]||[]).filter(x=>x.id!==id);store.set('packx',cx);
+ const st=store.get('pack',{});delete st['c'+id];store.set('pack',st);renderPack();}
+function cycleWho(ci,k,custId){const order=['R','A','B'];
+ if(custId){const cx=store.get('packx',{});const it=(cx[ci]||[]).find(x=>x.id===custId);if(!it)return;
+  it.who=order[(order.indexOf(it.who)+1)%3];store.set('packx',cx);}
+ else{const whoOv=store.get('packwho',{});const ii=Number(k.split('.')[1]);
+  const base=whoOv[k]||(PACK[ci].items[ii]||['','B'])[1];
+  whoOv[k]=order[(order.indexOf(base)+1)%3];store.set('packwho',whoOv);}
+ renderPack();}
 /* ============ SOS ============ */
 function renderSOS(){document.getElementById('soslist').innerHTML=
  `<div class="card">${SOS.map(([n,t])=>`<div class="row" style="padding:7px 0;border-bottom:1px dashed var(--line)">
@@ -489,12 +521,13 @@ function localGuide(q){q=q.toLowerCase();const n=nowLocal(),day=baseFor(n),sky=w
  if(/plan|today/.test(q))return day.legs.map(l=>`${l.t} ${l.n}`).join('\n');
  return 'Offline guide covers: next / tonight / pack / today / call <place>. For everything else, add the AI endpoint in Settings.';}
 async function sendChat(){const inp=document.getElementById('chatin'),q=inp.value.trim();if(!q)return;inp.value='';pushMsg('u',q);
+ if(SET.ai&&!/^https?:\/\//i.test(SET.ai))SET.ai='https://'+SET.ai;
  if(!SET.ai){pushMsg('a',localGuide(q));return;}
  pushMsg('a','…');
  try{
   const sys=`You are the expedition guide for R & A's Alaska trip Sept 2–8 2026. Be concise, decisive, warm. Current base: ${baseFor(nowLocal()).base.name}. Sky: ${JSON.stringify(window._sky||{})}. Itinerary: ${TRIP.map(d=>d.label+': '+d.legs.map(l=>l.t+' '+l.n).join('; ')).join(' | ')}`;
   const hist=CHAT.filter(m=>m.t!=='…').slice(-8).map(m=>({role:m.w==='u'?'user':'assistant',content:m.t}));
-  const r=await fetch(SET.ai.replace(/\/$/,'')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+  const r=await fetch(SET.ai.replace(/\/$/,'')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json','X-FU-Token':SET.tok||''},
     body:JSON.stringify({system:sys,messages:hist})});
   const j=await r.json();CHAT.pop();pushMsg('a',j.reply||j.error||'No reply — check the proxy.');
  }catch(e){CHAT.pop();pushMsg('a','Guide unreachable (no signal or proxy down). Falling back:\n'+localGuide(q));}}
@@ -507,7 +540,8 @@ function syncSettingsUI(){
  document.getElementById('kpv').textContent=SET.kp;document.getElementById('clv').textContent=SET.cl;
  kp.oninput=()=>{SET.kp=parseFloat(kp.value);document.getElementById('kpv').textContent=SET.kp;};kp.onchange=saveSet;
  cl.oninput=()=>{SET.cl=parseInt(cl.value);document.getElementById('clv').textContent=SET.cl;};cl.onchange=saveSet;
- const ai=document.getElementById('aiurl');ai.value=SET.ai;ai.onchange=()=>{SET.ai=ai.value.trim();saveSet();};}
+ const ai=document.getElementById('aiurl');ai.value=SET.ai;ai.onchange=()=>{let v=ai.value.trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;SET.ai=v;ai.value=v;saveSet();};
+ const tk=document.getElementById('aitok');tk.value=SET.tok||'';tk.onchange=()=>{SET.tok=tk.value.trim();saveSet();};}
 /* ============ THEME + OFFLINE + BOOT ============ */
 function applyTheme(){const h=new Date().getHours();
  const dark = SET.theme==='dark' || (SET.theme==='auto' && (h>=20||h<8));
@@ -532,9 +566,9 @@ async function prepareOffline(){const b=document.getElementById('prepbtn');b.tex
   else b.textContent='Sky cached ✓ (host over HTTPS for map tiles)';
  }catch(e){b.textContent='Partial pack — retry with better signal';}}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(()=>{
-  document.getElementById('swstat').textContent='offline: ready ✓ · v2.1 · works with zero bars';
- }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.1';});}
-else document.getElementById('swstat').textContent='offline: not supported here · v2.1';
+  document.getElementById('swstat').textContent='offline: ready ✓ · v2.5 · works with zero bars';
+ }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.5';});}
+else document.getElementById('swstat').textContent='offline: not supported here · v2.5';
 applyTheme();renderDays();renderPack();renderSOS();renderVerdictRule();tick();refreshSky(false);
 setInterval(applyTheme,10*60*1000);
 </script>
