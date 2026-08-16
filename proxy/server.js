@@ -1,14 +1,17 @@
 // Field Unit AI proxy — deploy to Railway, set ANTHROPIC_API_KEY env var
 const http=require('http');
 const KEY=process.env.ANTHROPIC_API_KEY;
+const TOKEN=process.env.FU_TOKEN||'';
+const ORIGIN='https://rohitlodha15.github.io';
 const PORT=process.env.PORT||3000;
 http.createServer(async (req,res)=>{
-  res.setHeader('Access-Control-Allow-Origin','*');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Origin',ORIGIN);
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, X-FU-Token');
   res.setHeader('Access-Control-Allow-Methods','POST,OPTIONS');
   if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
   if(req.method!=='POST'||!req.url.startsWith('/api/chat')){res.writeHead(404);return res.end('{"error":"POST /api/chat"}');}
   if(!KEY){res.writeHead(500);return res.end('{"error":"ANTHROPIC_API_KEY not set on Railway"}');}
+  if(TOKEN && (req.headers['x-fu-token']||'')!==TOKEN){res.writeHead(401);return res.end('{"error":"Bad or missing Guide token — set it in the app Settings"}');}
   let body='';req.on('data',c=>body+=c);
   req.on('end',async ()=>{
     try{
