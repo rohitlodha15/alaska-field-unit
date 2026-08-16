@@ -158,7 +158,7 @@ input.note,textarea.note{width:100%;background:var(--panel2);border:1px solid va
   <div class="card sub"><div class="kick">TONIGHT'S BASE</div><div id="skybase" style="font-weight:650;margin-top:3px">—</div>
     <div class="dimt">Moon: waning crescent all trip — rises pre-dawn, nights effectively moonless.</div>
     <div class="dimt mono" id="skyage"></div>
-    <button class="btn wide" onclick="refreshSky(true)">Refresh sky data</button></div>
+    <button class="btn wide" onclick="skyRefreshUI(this)">Refresh sky data</button></div>
   <div class="card" id="gokit" style="display:none">
     <div class="kick" style="color:var(--go)">VERDICT SAYS GET DRESSED</div>
     <div style="margin-top:6px;font-size:13.5px">Layers + beanie + HotHands · thermos · headlamp on <b>red</b> · phone on tripod.</div>
@@ -346,6 +346,7 @@ async function refreshSky(force){
  const n=nowLocal(),day=baseFor(n),cacheKey='sky.'+day.d;
  let data=store.get(cacheKey,null);
  const stale=!data||(Date.now()-data.ts>55*60*1000);
+ let status=data?'cache':'none';
  if((force||stale)&&navigator.onLine){
   try{
    const [kpNow,kpFc,met]=await Promise.all([
@@ -361,10 +362,22 @@ async function refreshSky(force){
      times.forEach((tt,i)=>{const h=new Date(tt+':00'+TZ);const dh=(h-n)/36e5;const hr=h.getHours();
        if(dh>-1&&dh<12&&(hr>=21||hr<=2))idx.push(cc[i]);});
      if(idx.length)cl=Math.round(idx.reduce((a,b)=>a+b,0)/idx.length);}
-   if(kpC!=null||cl!=null){data={ts:Date.now(),kpC,kpT,cl};store.set(cacheKey,data);}
-  }catch(e){}
- }
+   if(kpC!=null||cl!=null){data={ts:Date.now(),kpC,kpT,cl};store.set(cacheKey,data);status='fresh';}
+   else status='fetchfail';
+  }catch(e){status='fetchfail';}
+ }else if(force&&!navigator.onLine){status='offline';}
  renderSky(data,day);
+ return status;
+}
+async function skyRefreshUI(btn){
+ const old=btn.textContent; btn.disabled=true; btn.textContent='Refreshing…';
+ const s=await refreshSky(true);
+ const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+ btn.textContent = s==='fresh' ? ('✓ Updated '+now)
+   : s==='offline' ? '⚠ No signal — showing cached'
+   : s==='fetchfail' ? '⚠ Feeds unreachable — cached shown'
+   : ('✓ Current '+now);
+ setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2600);
 }
 function renderSky(d,day){
  const st=sunTimes(nowLocal(),day.base.lat,day.base.lon);
@@ -405,7 +418,8 @@ function renderDays(){
 }
 function editT(k){const v=prompt('Correct this from your confirmation:',EDITS[k]||'');if(v!=null){EDITS[k]=v.trim();store.set('edits',EDITS);renderDays();tick();}}
 /* ============ MAP ============ */
-let map,tileLayer;
+let map,tileLayer,dayLayers=[];
+const HID=new Set(store.get('hiddays',[]));
 function tileScheme(){return document.documentElement.classList.contains('day')?'light_all':'dark_all';}
 function rebuildTiles(){if(!map)return;if(tileLayer)map.removeLayer(tileLayer);
  tileLayer=L.tileLayer(`https://{s}.basemaps.cartocdn.com/${tileScheme()}/{z}/{x}/{y}{r}.png`,
@@ -413,15 +427,25 @@ function rebuildTiles(){if(!map)return;if(tileLayer)map.removeLayer(tileLayer);
 function initMap(){if(map){setTimeout(()=>map.invalidateSize(),50);return;}
  map=L.map('map',{zoomControl:false}).setView([63.2,-148.9],5);
  rebuildTiles();
- TRIP.forEach(day=>{const pts=day.legs.filter(l=>l.lat).map(l=>[l.lat,l.lon]);
-  if(pts.length>1)L.polyline(pts,{color:day.color,weight:3,opacity:.75,dashArray:'6 7'}).addTo(map);
+ dayLayers=TRIP.map((day,di)=>{const g=L.layerGroup();
+  const pts=day.legs.filter(l=>l.lat).map(l=>[l.lat,l.lon]);
+  if(pts.length>1)L.polyline(pts,{color:day.color,weight:3,opacity:.75,dashArray:'6 7'}).addTo(g);
   day.legs.filter(l=>l.lat).forEach(l=>{
-   L.circleMarker([l.lat,l.lon],{radius:7,color:day.color,weight:2,fillColor:day.color,fillOpacity:.35}).addTo(map)
+   L.circleMarker([l.lat,l.lon],{radius:7,color:day.color,weight:2,fillColor:day.color,fillOpacity:.35}).addTo(g)
     .bindPopup(`<div class="mappop"><b>${l.n}</b><div class="dimt">${day.label} · ${l.t}</div>
     <a class="btn" href="https://maps.apple.com/?daddr=${l.lat},${l.lon}&q=${encodeURIComponent(l.n)}">Navigate ➤</a>
-    ${l.tel?` <a class="btn" href="tel:+${l.tel}">Call</a>`:''}</div>`);});});
- document.getElementById('maplegend').innerHTML=TRIP.map(d=>`<span class="chip" style="border-color:${d.color};color:${d.color}">${d.label.split(' · ')[0]}</span>`).join('');
+    ${l.tel?` <a class="btn" href="tel:+${l.tel}">Call</a>`:''}</div>`);});
+  if(!HID.has(di))g.addTo(map); return g;});
+ renderLegend();
 }
+function renderLegend(){
+ document.getElementById('maplegend').innerHTML=
+  `<button class="chip ${HID.size?'':'on'}" onclick="dayAll()" style="cursor:pointer">ALL</button>`+
+  TRIP.map((d,i)=>`<button class="chip" onclick="toggleDay(${i})" style="cursor:pointer;border-color:${d.color};color:${d.color};${HID.has(i)?'opacity:.3;text-decoration:line-through':''}">${d.label.split(' · ')[0]}</button>`).join('');
+}
+function toggleDay(i){if(HID.has(i)){HID.delete(i);dayLayers[i]&&dayLayers[i].addTo(map);}else{HID.add(i);dayLayers[i]&&map.removeLayer(dayLayers[i]);}
+ store.set('hiddays',[...HID]);renderLegend();}
+function dayAll(){HID.forEach(i=>dayLayers[i]&&dayLayers[i].addTo(map));HID.clear();store.set('hiddays',[]);renderLegend();}
 /* ============ PACK ============ */
 function renderPack(){const st=store.get('pack',{});
  document.getElementById('whoami').textContent='THIS UNIT: '+SET.owner;
@@ -508,9 +532,9 @@ async function prepareOffline(){const b=document.getElementById('prepbtn');b.tex
   else b.textContent='Sky cached ✓ (host over HTTPS for map tiles)';
  }catch(e){b.textContent='Partial pack — retry with better signal';}}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(()=>{
-  document.getElementById('swstat').textContent='offline: ready ✓ · v2.0 · works with zero bars';
- }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.0';});}
-else document.getElementById('swstat').textContent='offline: not supported here · v2.0';
+  document.getElementById('swstat').textContent='offline: ready ✓ · v2.1 · works with zero bars';
+ }).catch(()=>{document.getElementById('swstat').textContent='offline: host over HTTPS to enable · v2.1';});}
+else document.getElementById('swstat').textContent='offline: not supported here · v2.1';
 applyTheme();renderDays();renderPack();renderSOS();renderVerdictRule();tick();refreshSky(false);
 setInterval(applyTheme,10*60*1000);
 </script>
